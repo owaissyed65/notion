@@ -1,12 +1,46 @@
 "use client";
-import React from "react";
-import { ChevronsLeft, ChevronsRight } from "lucide-react";
-import { ElementRef, MouseEvent, useRef } from "react";
+import React, {
+  useState,
+  ElementRef,
+  MouseEvent,
+  useRef,
+  useEffect,
+} from "react";
+import { usePathname } from "next/navigation";
+
+import { ChevronsLeft, ChevronsRight, MenuIcon } from "lucide-react";
+import { useMediaQuery } from "usehooks-ts";
+
+import { cn } from "@/lib/utils";
 
 export const Navigation = () => {
+  // for path
+  const pathName = usePathname();
+  // for mobile checking
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  // all reference
   const isResizable = useRef(false);
   const sidebarRef = useRef<ElementRef<"aside">>(null);
   const navbarRef = useRef<ElementRef<"div">>(null);
+
+  // all states
+  const [isResetting, setResetting] = useState<Boolean>(false);
+  const [isCollapsed, setCollapsed] = useState(isMobile);
+
+  useEffect(() => {
+    if (isMobile) {
+      collapse();
+    } else {
+      handleSidebarControl();
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (isMobile) {
+      collapse();
+    }
+  }, [isMobile, pathName]);
+
   // for pressing mouse button
   const handleMouseDown = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -23,8 +57,10 @@ export const Navigation = () => {
     let clientX = e.clientX;
     if (clientX < 240) clientX = 240;
     if (clientX > 480) clientX = 480;
-    if (sidebarRef.current) {
+    if (sidebarRef.current && navbarRef.current) {
       sidebarRef.current.style.width = `${clientX}px`;
+      navbarRef.current.style.setProperty("left", `${clientX}px`);
+      navbarRef.current.style.setProperty("width", `calc(100% - ${clientX}px)`);
     }
   };
   // for release mouse button
@@ -35,21 +71,52 @@ export const Navigation = () => {
     // @ts-ignore
     document?.removeEventListener("mouseup", handleMouseUp);
   };
+
+  // for handlingsidebar Control
   const handleSidebarControl = () => {
-    if (!sidebarRef.current) return;
-    sidebarRef.current.style.width = "240px";
+    if (sidebarRef.current && navbarRef.current) {
+      setCollapsed(false);
+      setResetting(true);
+
+      sidebarRef.current.style.width = isMobile ? "100%" : "240px";
+      navbarRef.current.style.setProperty(
+        "width",
+        isMobile ? "0" : "calc(100% - 240px)"
+      );
+      navbarRef.current.style.setProperty("left", isMobile ? "100%" : "240px");
+      setTimeout(() => setResetting(false), 300);
+    }
+  };
+
+  // for collapsing
+  const collapse = () => {
+    if (sidebarRef.current && navbarRef.current) {
+      setCollapsed(true);
+      setResetting(true);
+
+      sidebarRef.current.style.width = "0";
+      navbarRef.current.style.setProperty("width", "100%");
+      navbarRef.current.style.setProperty("left", "0");
+      setTimeout(() => setResetting(false), 300);
+    }
   };
   return (
     <>
       <aside
         ref={sidebarRef}
-        className="group/sidebar h-full flex flex-col w-60 bg-secondary overflow-y-auto relative z-[99999]
-        transition-all ease-in-out
-      "
+        className={cn(
+          "group/sidebar h-full bg-secondary overflow-y-auto relative flex w-60 flex-col z-[99999]",
+          isResetting && "transition-all ease-in-out duration-300",
+          isMobile && "w-0"
+        )}
       >
         <div
-          className="absolute opacity-0 top-1 right-1 group-hover/sidebar:opacity-100 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition"
-          onClick={handleSidebarControl}
+          role="button"
+          className={cn(
+            "h-6 w-6 text-muted-foreground rounded-sm hover:bg-neutral-300 dark:hover:bg-neutral-600 absolute top-3 right-2 opacity-0 group-hover/sidebar:opacity-100 transition",
+            isMobile && "opacity-100"
+          )}
+          onClick={collapse}
         >
           <ChevronsLeft className="h-6 w-6" />
         </div>
@@ -60,12 +127,28 @@ export const Navigation = () => {
           <p>Documents</p>
         </div>
         <div
-          className="opacity-0 group-hover/sidebar:opacity-100 transition absolute top-0 h-full w-1 right-0 cursor-ew-resize bg-primary/10"
+          className="opacity-0 group-hover/sidebar:opacity-100 transition cursor-ew-resize absolute h-full w-1 bg-primary/10 right-0 top-0"
           onMouseDown={handleMouseDown}
-          onClick={() => {}}
+          onClick={handleSidebarControl}
         />
       </aside>
-      <div ref={navbarRef}></div>
+      <div
+        ref={navbarRef}
+        className={cn(
+          "absolute top-0 z-[99999] left-60 w-[calc(100%-240px)]",
+          isResetting && "transition-all ease-in-out duration-300",
+          isMobile && "left-0 w-full"
+        )}
+      >
+        <nav
+          className="bg-transparent px-3 py-2 w-full"
+          onClick={handleSidebarControl}
+        >
+          {isCollapsed && (
+            <MenuIcon role="button" className="h-6 w-6 text-muted-foreground" />
+          )}
+        </nav>
+      </div>
     </>
   );
 };
