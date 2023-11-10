@@ -8,10 +8,12 @@ import React, {
 } from "react";
 import { usePathname } from "next/navigation";
 
-import { ChevronsLeft, ChevronsRight, MenuIcon } from "lucide-react";
+import { ChevronsLeft, MenuIcon } from "lucide-react";
 import { useMediaQuery } from "usehooks-ts";
 
 import { cn } from "@/lib/utils";
+
+import UserItem from "./user-item";
 
 export const Navigation = () => {
   // for path
@@ -121,7 +123,7 @@ export const Navigation = () => {
           <ChevronsLeft className="h-6 w-6" />
         </div>
         <div>
-          <p>Action Item</p>
+          <UserItem />
         </div>
         <div className="mt-4">
           <p>Documents</p>

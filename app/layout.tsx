@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ConvexProvider } from "@/components/provider/convex-provider";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,6 +40,7 @@ export default function RootLayout({
             disableTransitionOnChange
             storageKey="jotion-theme-1"
           >
+            <Toaster position="bottom-right" />
             {children}
           </ThemeProvider>
         </ConvexProvider>
