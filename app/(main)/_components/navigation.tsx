@@ -8,12 +8,24 @@ import React, {
 } from "react";
 import { usePathname } from "next/navigation";
 
-import { ChevronsLeft, MenuIcon } from "lucide-react";
+import {
+  ChevronsLeft,
+  MenuIcon,
+  PlusCircle,
+  Search,
+  Settings,
+} from "lucide-react";
+import toast from "react-hot-toast";
 import { useMediaQuery } from "usehooks-ts";
+import { useMutation } from "convex/react";
 
 import { cn } from "@/lib/utils";
 
+import { api } from "@/convex/_generated/api";
+
 import UserItem from "./user-item";
+import Item from "./item";
+import DocumentList from "./document-list";
 
 export const Navigation = () => {
   // for path
@@ -24,6 +36,10 @@ export const Navigation = () => {
   const isResizable = useRef(false);
   const sidebarRef = useRef<ElementRef<"aside">>(null);
   const navbarRef = useRef<ElementRef<"div">>(null);
+
+  // queries
+
+  const create = useMutation(api.documents.create);
 
   // all states
   const [isResetting, setResetting] = useState<Boolean>(false);
@@ -102,6 +118,16 @@ export const Navigation = () => {
       setTimeout(() => setResetting(false), 300);
     }
   };
+
+  const onCreate = () => {
+    const promise = create({ title: "Untitled" });
+    toast.promise(promise, {
+      loading: "Creating a new note...",
+      success: "New note Created",
+      error: "Some error occured on creating",
+    });
+  };
+
   return (
     <>
       <aside
@@ -122,11 +148,14 @@ export const Navigation = () => {
         >
           <ChevronsLeft className="h-6 w-6" />
         </div>
-        <div>
+        <div className="space-y-2">
           <UserItem />
+          <Item onClick={() => {}} label="Search" isSearch icon={Search} />
+          <Item onClick={() => {}} label="Settings" icon={Settings} />
+          <Item onClick={onCreate} label="New page" icon={PlusCircle} />
         </div>
         <div className="mt-4">
-          <p>Documents</p>
+          <DocumentList />
         </div>
         <div
           className="opacity-0 group-hover/sidebar:opacity-100 transition cursor-ew-resize absolute h-full w-1 bg-primary/10 right-0 top-0"
