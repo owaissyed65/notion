@@ -14,6 +14,7 @@ import {
   PlusCircle,
   Search,
   Settings,
+  Trash,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMediaQuery } from "usehooks-ts";
@@ -26,6 +27,7 @@ import { api } from "@/convex/_generated/api";
 import UserItem from "./user-item";
 import Item from "./item";
 import DocumentList from "./document-list";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export const Navigation = () => {
   // for path
@@ -156,6 +158,15 @@ export const Navigation = () => {
         </div>
         <div className="mt-4">
           <DocumentList />
+          <Item onClick={onCreate} label="Add A New Page" icon={PlusCircle} />
+          <Popover>
+            <PopoverTrigger className="w-full mt-4">
+              <Item label="Trash" icon={Trash} onClick={() => {}} />
+            </PopoverTrigger>
+            <PopoverContent side={!isMobile?"right":"bottom"} className="p-0 w-72">
+              <p>Trash Box</p>
+            </PopoverContent>
+          </Popover>
         </div>
         <div
           className="opacity-0 group-hover/sidebar:opacity-100 transition cursor-ew-resize absolute h-full w-1 bg-primary/10 right-0 top-0"

@@ -3,8 +3,16 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 
-import { ChevronDown, ChevronRight, Plus } from "lucide-react";
-
+import toast from "react-hot-toast";
+import {
+  ChevronDown,
+  ChevronRight,
+  MoreHorizontal,
+  Plus,
+  Server,
+  Trash,
+} from "lucide-react";
+import { useUser } from "@clerk/clerk-react";
 import { useMutation } from "convex/react";
 
 import { api } from "@/convex/_generated/api";
@@ -13,7 +21,13 @@ import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import toast from "react-hot-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ItemProps {
   id?: Id<"documents">;
@@ -40,26 +54,30 @@ const Item = ({
   onExpand,
 }: ItemProps) => {
   const router = useRouter();
+  const user = useUser();
   const ChevronIcons = expanded ? ChevronDown : ChevronRight;
+
   const create = useMutation(api.documents.create);
+  const archieve = useMutation(api.documents.archieve);
+
   const handleExpand = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>
   ) => {
     event.stopPropagation();
     onExpand?.();
   };
+
   const handleInfiniteChild = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>
   ) => {
     event.stopPropagation();
     if (!id) return;
-
     const promise = create({ title: "Untitled", parentDocument: id }).then(
       (documentId) => {
         if (!expanded) {
           onExpand?.();
         }
-        // router.push(`/documents/${documentId}`);
+        router.push(`/documents/${documentId}`);
       }
     );
     toast.promise(promise, {
@@ -68,7 +86,18 @@ const Item = ({
       success: "Created new note",
     });
   };
-  
+  const handleArchieved = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    event.stopPropagation();
+    if (!id) return;
+    const promise = archieve({ id });
+    toast.promise(promise, {
+      error: "Some Error Occurred",
+      loading: "Loading....",
+      success: "Successfully into trash",
+    });
+  };
   return (
     <div
       onClick={onClick}
@@ -101,11 +130,39 @@ const Item = ({
         </kbd>
       )}
       {!!id && (
-        <div
-          className="ml-auto hidden group-hover:block hover:bg-neutral-500 transition-all"
-          onClick={handleInfiniteChild}
-        >
-          <Plus className="w-5 h-5" />
+        <div className="ml-auto flex items-center gap-x-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <div
+                className="opacity-0 group-hover:opacity-100 h-full ml-auto rounded-sm hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-all"
+                role="button"
+              >
+                <MoreHorizontal className="h-5 w-6 text-muted-foreground" />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-60"
+              align="start"
+              side="right"
+              forceMount
+            >
+              <DropdownMenuItem onClick={handleArchieved}>
+                <Trash className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <div className="text-xs text-muted-foreground p-2">
+                Last edited by: {user?.user?.fullName}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <div
+            className="ml-auto opacity-0 group-hover:opacity-100 hover:bg-neutral-500 dark:hover:bg-neutral-600 transition-all"
+            onClick={handleInfiniteChild}
+            role="button"
+          >
+            <Plus className="w-5 h-5" />
+          </div>
         </div>
       )}
     </div>
